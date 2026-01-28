@@ -1,0 +1,53 @@
+#!/bin/bash
+
+###############################################################################
+# Chess.app launcher (FINAL FINAL)
+# Uses system universal Python forced to arm64
+###############################################################################
+
+set -e
+
+# --- Лог ---
+LOG_FILE="/tmp/chess_app.log"
+exec >"$LOG_FILE" 2>&1
+echo "===== Chess.app start $(date) ====="
+
+# --- PATH для Finder ---
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# --- Пути ---
+APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+RES_DIR="$APP_DIR/../Resources"
+PY_FILE="$RES_DIR/main.py"
+
+echo "APP_DIR=$APP_DIR"
+echo "RES_DIR=$RES_DIR"
+echo "PY_FILE=$PY_FILE"
+
+# --- Universal Python (принудительно arm64) ---
+PYTHON="/usr/local/bin/python3"
+
+if [ ! -x "$PYTHON" ]; then
+    echo "❌ Python не найден: $PYTHON"
+    exit 1
+fi
+
+echo "Python binary:"
+file "$PYTHON"
+
+# --- Проверка PyQt6 ---
+/usr/bin/arch -arm64 "$PYTHON" -m pip show PyQt6 >/dev/null 2>&1 || {
+    echo "❌ PyQt6 не установлен для arm64 Python"
+    exit 1
+}
+
+# --- Проверка main.py ---
+if [ ! -f "$PY_FILE" ]; then
+    echo "❌ main.py не найден"
+    ls -la "$RES_DIR"
+    exit 1
+fi
+
+# --- Запуск приложения ---
+echo "🚀 Запуск Python приложения (arm64)"
+exec /usr/bin/arch -arm64 "$PYTHON" "$PY_FILE"
